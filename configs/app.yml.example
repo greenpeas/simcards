@@ -1,0 +1,9 @@
+enableService: false
+# Database credentials
+database:
+  psql:
+    url: "postgres://wwwspo:qwerty@localhost:5432/wwwspo?application_name=GoSimImporter"
+  redis:
+    addr: "localhost:6379"
+    password: ""
+    db:       0

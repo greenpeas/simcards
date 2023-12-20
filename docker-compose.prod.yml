@@ -1,0 +1,17 @@
+version: "3.7"
+services:
+
+  daemon:
+    image: creg.kvant.online/spo/www/go-sim-cards-import:latest
+    restart: always
+    volumes:
+      - /configs/simcard-importer/app.yml:/configs/app.yml
+      - logs:/logs
+
+networks:
+  default:
+    external: false
+    name: spo-network
+
+volumes:
+    logs:

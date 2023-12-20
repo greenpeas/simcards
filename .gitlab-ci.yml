@@ -1,0 +1,43 @@
+stages:
+  - build
+  - run-on-prod
+
+variables:
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:latest
+  SERVICE_NAME: daemon
+
+build-job: # Сборка на сервере creg
+  stage: build
+  tags:
+    - creg-shell
+  script:
+    - >
+      docker build
+      -t $IMAGE_TAG
+      -f ./Dockerfile .
+
+    - docker login -u $CI_SPO_USER -p $CI_SPO_PASSWORD $CI_REGISTRY
+    - docker push $IMAGE_TAG
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master" || $CI_COMMIT_BRANCH == "test"
+      exists:
+        - Dockerfile
+
+run-on-prod-job: # Запуск в проде
+  stage: run-on-prod
+  tags:
+    - prod-shell
+  before_script:
+    - docker login -u $READ_ALL_REGISTRY_USER -p $READ_ALL_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker-compose -f docker-compose.prod.yml pull $SERVICE_NAME
+    - docker-compose -f docker-compose.prod.yml up -d $SERVICE_NAME
+  after_script:
+    - docker logout ${CI_REGISTRY}
+  when: manual
+  allow_failure: false # блокируем конвейер
+  # Запускается только в том случае, если ветка master
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
